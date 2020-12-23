@@ -26,6 +26,7 @@
     "overtrue/wechat": "^5.2",
     "php-di/php-di": "^6.3",
     "vlucas/phpdotenv": "^5.2",
+    "workerman/crontab": "^1.0",
     "workerman/validation": "^3.0",
     "workerman/workerman": "^4.0",
     "yansongda/pay": "^2.10"
