@@ -1,19 +1,15 @@
 {
   "name": "daophp/framework",
-  "type": "project",
-  "description": "High performance HTTP Service Framework.",
-  "keywords": [
-    "high performance",
-    "http service"
-  ],
+  "description": "The DaoPHP Framework.",
+  "keywords": ["framework", "daophp"],
   "license": "MIT",
-  "homepage": "http://www.daophp.com",
+  "homepage": "https://www.daophp.com",
   "support": {
     "issues": "https://github.com/daophp/framework/issues",
     "source": "https://github.com/daophp/framework"
   },
   "require": {
-    "php": "^7.2.5",
+    "php": "^7.4|^8.0",
     "ext-json": "*",
     "ext-mbstring": "*",
     "ext-openssl": "*",
@@ -34,11 +30,6 @@
     "workerman/workerman": "^4.0",
     "yansongda/pay": "^2.9"
   },
-  "config": {
-    "optimize-autoloader": true,
-    "preferred-install": "dist",
-    "sort-packages": true
-  },
   "autoload": {
     "psr-4": {
       "Swift\\": "src/"
@@ -47,9 +38,12 @@
       "src/Support/helpers.php"
     ]
   },
-  "minimum-stability": "dev",
-  "prefer-stable": true,
   "suggest": {
     "ext-event": "For better performance. "
-  }
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
 }
