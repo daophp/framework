@@ -9,6 +9,12 @@ namespace Swift\Contracts;
 interface View
 {
     /**
+     * @param $name
+     * @param null $value
+     */
+    static function assign($name, $value = null);
+
+    /**
      * @param $template
      * @param $vars
      * @param null $app
