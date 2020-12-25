@@ -3,14 +3,28 @@
 namespace Swift\View;
 
 use Jenssegers\Blade\Blade as BladeView;
-use Swift\Contracts\View;
+use Swift\Contracts\View as ViewContract;
 
 /**
  * Class Blade
  * @package Swift\View
  */
-class Blade implements View
+class Blade implements ViewContract
 {
+    /**
+     * @var array
+     */
+    protected static $_vars = [];
+
+    /**
+     * @param $name
+     * @param null $value
+     */
+    public static function assign($name, $value = null)
+    {
+        static::$_vars += is_array($name) ? $name : [$name => $value];
+    }
+
     /**
      * @param $template
      * @param $vars
@@ -19,22 +33,22 @@ class Blade implements View
      */
     public static function render($template, $vars, $app = null)
     {
-        static $blade;
+        static $views = [];
 
-        $app_name = $app == null ? request()->app : $app;
-        if ($app_name === '') {
-            $viewPaths = config('view.paths');
-        } else {
-            $viewPaths = app_path($app_name . '/Views');
+        $app = is_null($app) ? request()->app : $app;
+
+        if (!isset($views[$app])) {
+            $viewPath = $app === '' ? config('view.paths') : app_path($app . '/Views');
+            $cachePath = runtime_path('views' . ($app ? DIRECTORY_SEPARATOR . $app : ''));
+            if (!is_dir($cachePath)) {
+                mkdir($cachePath, 0755, true);
+            }
+            $views[$app] = isset($views[$app]) ? $views[$app] : new BladeView($viewPath, $cachePath);
         }
 
-        $cachePath = runtime_path('views' . ($app_name ? DIRECTORY_SEPARATOR . $app_name : ''));
-        if (!is_dir($cachePath)) {
-            mkdir($cachePath, 0755, true);
-        }
-
-        $blade[$app_name] = isset($blade[$app_name]) ? $blade[$app_name] : new BladeView($viewPaths, $cachePath);
-
-        return $blade[$app_name]->render($template, $vars);
+        $vars += static::$_vars;
+        $content = $views[$app]->render($template, $vars);
+        static::$_vars = [];
+        return $content;
     }
 }
