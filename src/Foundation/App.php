@@ -16,6 +16,7 @@ use Swift\Foundation\Exception\ExceptionHandlerInterface;
 use Swift\Http\Middleware\Middleware;
 use Swift\Http\Request;
 use Swift\Http\Response;
+use Swift\Routing\BaseRoute;
 use Swift\Routing\Route;
 use Throwable;
 use Workerman\Connection\TcpConnection;
@@ -196,12 +197,15 @@ class App
      * @param $app
      * @param $call
      * @param null $args
+     * @param bool $with_global_middleware
+     * @param BaseRoute $route
      * @return Closure|mixed
      */
-    protected static function getCallback($app, $call, $args = null, $with_global_middleware = true)
+    protected static function getCallback($app, $call, $args = null, $with_global_middleware = true, $route = null)
     {
         $args = $args === null ? null : array_values($args);
         $middleware = Middleware::getMiddleware($app, $with_global_middleware);
+        $middleware = $route ? array_merge($route->getMiddleware(), $middleware) : $middleware;
         if ($middleware) {
             $callback = array_reduce($middleware, function ($carry, $pipe) {
                 return function ($request) use ($carry, $pipe) {
@@ -278,14 +282,15 @@ class App
         $ret = Route::dispatch($request->method(), $path);
         if ($ret[0] === Dispatcher::FOUND) {
             $ret[0] = 'route';
-            $callback = $ret[1];
+            $callback = $ret[1]['callback'];
+            $route = $ret[1]['route'];
             $app = $controller = $action = '';
             $args = !empty($ret[2]) ? $ret[2] : null;
             if (is_array($callback) && isset($callback[0]) && $controller = get_class($callback[0])) {
                 $app = static::getAppByController($controller);
                 $action = static::getRealMethod($controller, $callback[1]) ?? '';
             }
-            $callback = static::getCallback($app, $callback, $args);
+            $callback = static::getCallback($app, $callback, $args, true, $route);
             static::$_callbacks[$key] = [$callback, $app, $controller ? $controller : '', $action];
             list($callback, $request->app, $request->controller, $request->action) = static::$_callbacks[$key];
             static::send($connection, $callback($request), $request);
