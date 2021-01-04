@@ -102,7 +102,6 @@ class App
         static::$_container = $container;
         static::$_logger = $logger;
         static::$_publicPath = $public_path;
-        static::loadController($app_path);
 
         $max_requst_count = (int)Config::get('server.max_request');
         if ($max_requst_count > 0) {
@@ -147,17 +146,22 @@ class App
             $controller_and_action = static::parseControllerAction($path);
             if (!$controller_and_action) {
                 // when route, controller and action not found, try to use Route::fallback
-                if (($fallback = Route::getFallback()) !== null) {
-                    static::send($connection, $fallback($request), $request);
-                } else {
-                    static::send404($connection, $request);
-                }
+                $callback = Route::getFallback() ?: function () {
+                    static $response_404;
+                    if (!$response_404){
+                        $response_404 = new Response(404, [], file_get_contents(static::$_publicPath . '/404.html'));
+                    }
+                    return $response_404;
+                };
+                static::$_callbacks[$key] = [$callback, '', '', ''];
+                list($callback, $request->app, $request->controller, $request->action) = static::$_callbacks[$key];
+                static::send($connection, $callback($request), $request);
                 return null;
             }
             $app = $controller_and_action['app'];
             $controller = $controller_and_action['controller'];
             $action = $controller_and_action['action'];
-            $callback = static::getCallback($app, [static::$_container->get($controller), $action]);
+            $callback = static::getCallback($app, [$controller_and_action['instance'], $action]);
             static::$_callbacks[$key] = [$callback, $app, $controller, $action];
             list($callback, $request->app, $request->controller, $request->action) = static::$_callbacks[$key];
             static::send($connection, $callback($request), $request);
@@ -355,15 +359,6 @@ class App
     }
 
     /**
-     * @param TcpConnection $connection
-     * @param $request
-     */
-    protected static function send404(TcpConnection $connection, $request)
-    {
-        static::send($connection, new Response(404, [], file_get_contents(static::$_publicPath . '/404.html')), $request);
-    }
-
-    /**
      * @param $path
      * @return array|bool
      */
@@ -372,19 +367,21 @@ class App
         if ($path === '/' || $path === '') {
             $controller_class = 'App\Http\Controllers\IndexController';
             $action = 'index';
-            if (class_exists($controller_class, false) && is_callable([static::$_container->get($controller_class), $action])) {
+            if (class_exists($controller_class) && is_callable([$instance = static::$_container->get($controller_class), $action])) {
                 return [
                     'app' => '',
                     'controller' => \App\Http\Controllers\IndexController::class,
-                    'action' => static::getRealMethod($controller_class, $action)
+                    'action' => static::getRealMethod($controller_class, $action),
+                    'instance' => $instance,
                 ];
             }
             $controller_class = 'App\Index\Controllers\IndexController';
-            if (class_exists($controller_class, false) && is_callable([static::$_container->get($controller_class), $action])) {
+            if (class_exists($controller_class) && is_callable([$instance = static::$_container->get($controller_class), $action])) {
                 return [
                     'app' => 'Index',
                     'controller' => \App\Index\Controllers\IndexController::class,
-                    'action' => static::getRealMethod($controller_class, $action)
+                    'action' => static::getRealMethod($controller_class, $action),
+                    'instance' => $instance,
                 ];
             }
             return false;
@@ -403,11 +400,12 @@ class App
             $action = $explode[1];
         }
         $controller_class = "App\\Http\\Controllers\\{$controller}Controller";
-        if (class_exists($controller_class, false) && is_callable([static::$_container->get($controller_class), $action])) {
+        if (class_exists($controller_class) && is_callable([$instance = static::$_container->get($controller_class), $action])) {
             return [
                 'app' => '',
                 'controller' => get_class(static::$_container->get($controller_class)),
-                'action' => static::getRealMethod($controller_class, $action)
+                'action' => static::getRealMethod($controller_class, $action),
+                'instance' => $instance,
             ];
         }
 
@@ -421,11 +419,12 @@ class App
             }
         }
         $controller_class = "App\\$app\\Controllers\\{$controller}Controller";
-        if (class_exists($controller_class, false) && is_callable([static::$_container->get($controller_class), $action])) {
+        if (class_exists($controller_class) && is_callable([$instance = static::$_container->get($controller_class), $action])) {
             return [
                 'app' => $app,
                 'controller' => get_class(static::$_container->get($controller_class)),
-                'action' => static::getRealMethod($controller_class, $action)
+                'action' => static::getRealMethod($controller_class, $action),
+                'instance' => $instance,
             ];
         }
         return false;
@@ -461,19 +460,6 @@ class App
             echo $e;
         }
         return ob_get_clean();
-    }
-
-    /**
-     * @param $path
-     */
-    public static function loadController($path)
-    {
-        foreach (glob($path . '/Http/Controllers/*.php') as $file) {
-            require_once $file;
-        }
-        foreach (glob($path . '/*/Controllers/*.php') as $file) {
-            require_once $file;
-        }
     }
 
     /**
