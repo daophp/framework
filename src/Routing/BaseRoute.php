@@ -5,7 +5,6 @@ namespace Swift\Routing;
 use FastRoute\Dispatcher\GroupCountBased;
 use FastRoute\RouteCollector;
 use Swift\Foundation\App;
-use Swift\Foundation\App;
 use Swift\Routing\Route as Router;
 
 /**
