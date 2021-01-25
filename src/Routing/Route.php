@@ -49,6 +49,11 @@ class Route
     protected static $_groupPrefix = '';
 
     /**
+     * @var bool
+     */
+    protected static $_disableDefaultRoute = false;
+
+    /**
      * @var BaseRoute[]
      */
     protected $_routes = [];
@@ -159,6 +164,22 @@ class Route
     }
 
     /**
+     * disableDefaultRoute.
+     */
+    public static function disableDefaultRoute()
+    {
+        static::$_disableDefaultRoute = true;
+    }
+
+    /**
+     * @return bool
+     */
+    public static function hasDisableDefaultRoute()
+    {
+        return static::$_disableDefaultRoute === true;
+    }
+
+    /**
      * @param $middleware
      * @return $this
      */
@@ -221,6 +242,9 @@ class Route
                return [App::container()->get($callback[0]), $callback[1]];
             }
             return $callback;
+        } else if (is_array($callback)) {
+            echo "Route set to $path is not callable\n";
+            return false;
         }
 
         $callback = explode('@', $callback);
