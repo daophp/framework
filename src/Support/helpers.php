@@ -205,14 +205,15 @@ function session($key = null, $default = null)
  */
 function trans(string $id, array $parameters = [], string $domain = null, string $locale = null)
 {
-    return TranslationProvider::trans($id, $parameters, $domain, $locale);
+    $res = TranslationProvider::trans($id, $parameters, $domain, $locale);
+    return $res === '' ? $id : $res;
 }
 
 /**
  * @param null|string $locale
  * @return string
  */
-function locale(string $locale)
+function locale(string $locale = null)
 {
     if (!$locale) {
         return TranslationProvider::getLocale();

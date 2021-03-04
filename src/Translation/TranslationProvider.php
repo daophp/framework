@@ -30,19 +30,36 @@ class TranslationProvider implements Bootstrap
         if (!class_exists('\Symfony\Component\Translation\Translator')) {
             return;
         }
+
         $config = config('translation', []);
-        static::$_translator = $translator = new Translator($config['locale']);
-        $translator->addLoader('php', new PhpFileLoader());
-        $translator->setFallbackLocales($config['fallback_locale']);
         if (!$translations_path = realpath($config['path'])) {
             return;
         }
-        foreach (glob($translations_path . DIRECTORY_SEPARATOR . '*' . DIRECTORY_SEPARATOR . '*.php') as $file) {
-            $domain = basename($file, '.php');
-            $dir_name = pathinfo($file, PATHINFO_DIRNAME);
-            $locale = substr(strrchr($dir_name, DIRECTORY_SEPARATOR), 1);
-            if ($domain && $locale) {
-                $translator->addResource('php', $file, $locale, $domain);
+
+        static::$_translator = $translator = new Translator($config['locale']);
+        $translator->setFallbackLocales($config['fallback_locale']);
+
+        $classes = [
+            'Symfony\Component\Translation\Loader\PhpFileLoader' => [
+                'extension' => '.php',
+                'format' => 'phpfile'
+            ],
+            'Symfony\Component\Translation\Loader\PoFileLoader' => [
+                'extension' => '.po',
+                'format' => 'pofile'
+            ]
+        ];
+
+        foreach ($classes as $class => $opts)
+        {
+            $translator->addLoader($opts['format'], new $class);
+            foreach (glob($translations_path . DIRECTORY_SEPARATOR . '*' . DIRECTORY_SEPARATOR . '*' . $opts['extension']) as $file) {
+                $domain = basename($file, $opts['extension']);
+                $dir_name = pathinfo($file, PATHINFO_DIRNAME);
+                $locale = substr(strrchr($dir_name, DIRECTORY_SEPARATOR), 1);
+                if ($domain && $locale) {
+                    $translator->addResource($opts['format'], $file, $locale, $domain);
+                }
             }
         }
     }
