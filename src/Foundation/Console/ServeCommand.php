@@ -5,7 +5,6 @@ namespace Swift\Foundation\Console;
 use Dotenv\Dotenv;
 use ErrorException;
 use Swift\Config\Config;
-use Swift\Container\Container;
 use Swift\Container\ContainerProvider;
 use Swift\Foundation\App;
 use Swift\Http\Middleware\Middleware;
@@ -169,7 +168,7 @@ class ServeCommand extends Command
                     if (isset($server['listen'])) {
                         echo "listen: {$server['listen']}\n";
                     }
-                    $instance = Container::make($server['handler'], $server['constructor'] ?? []);
+                    $instance = ContainerProvider::make($server['handler'], $server['constructor'] ?? []);
                     worker_bind($listen, $instance);
                     $listen->listen();
                 }
@@ -180,7 +179,7 @@ class ServeCommand extends Command
                         return;
                     }
 
-                    $instance = Container::make($config['handler'], $config['constructor'] ?? []);
+                    $instance = ContainerProvider::make($config['handler'], $config['constructor'] ?? []);
                     worker_bind($worker, $instance);
                 }
             };
