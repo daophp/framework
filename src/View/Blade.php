@@ -22,7 +22,7 @@ class Blade implements ViewContract
      */
     public static function assign($name, $value = null)
     {
-        static::$_vars += is_array($name) ? $name : [$name => $value];
+        static::$_vars = array_merge(static::$_vars, is_array($name) ? $name : [$name => $value]);
     }
 
     /**
@@ -46,7 +46,7 @@ class Blade implements ViewContract
             $views[$app] = isset($views[$app]) ? $views[$app] : new BladeView($viewPath, $cachePath);
         }
 
-        $vars += static::$_vars;
+        $vars = array_merge(static::$_vars, $vars);
         $content = $views[$app]->render($template, $vars);
         static::$_vars = [];
         return $content;
