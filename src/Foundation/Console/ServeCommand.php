@@ -168,8 +168,8 @@ class ServeCommand extends Command
                     if (isset($server['listen'])) {
                         echo "listen: {$server['listen']}\n";
                     }
-                    $class = ContainerProvider::make($server['handler'], $server['constructor'] ?? []);
-                    worker_bind($listen, $class);
+                    $instance = Container::make($server['handler'], $server['constructor'] ?? []);
+                    worker_bind($listen, $instance);
                     $listen->listen();
                 }
 
@@ -179,10 +179,9 @@ class ServeCommand extends Command
                         return;
                     }
 
-                    $class = ContainerProvider::make($config['handler'], $config['constructor'] ?? []);
-                    worker_bind($worker, $class);
+                    $instance = Container::make($config['handler'], $config['constructor'] ?? []);
+                    worker_bind($worker, $instance);
                 }
-
             };
         }
 
