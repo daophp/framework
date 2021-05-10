@@ -5,6 +5,7 @@ namespace Swift\Foundation\Console;
 use Dotenv\Dotenv;
 use ErrorException;
 use Swift\Config\Config;
+use Swift\Container\Container;
 use Swift\Container\ContainerProvider;
 use Swift\Foundation\App;
 use Swift\Http\Middleware\Middleware;
