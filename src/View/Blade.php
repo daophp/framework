@@ -38,12 +38,13 @@ class Blade implements ViewContract
         $app = is_null($app) ? request()->app : $app;
 
         if (!isset($views[$app])) {
-            $viewPath = $app === '' ? config('view.paths') : app_path($app . '/Views');
+            $viewPath = $app === '' ? public_path('themes/' . config('app.default_themes')) : app_path($app . '/Views');
+            echo $viewPath;
             $cachePath = runtime_path('views' . ($app ? DIRECTORY_SEPARATOR . $app : ''));
             if (!is_dir($cachePath)) {
                 mkdir($cachePath, 0755, true);
             }
-            $views[$app] = isset($views[$app]) ? $views[$app] : new BladeView($viewPath, $cachePath);
+            $views[$app] = $views[$app] ?? new BladeView($viewPath, $cachePath);
         }
 
         $vars = array_merge(static::$_vars, $vars);

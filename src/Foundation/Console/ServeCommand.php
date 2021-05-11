@@ -59,7 +59,7 @@ class ServeCommand extends Command
         Config::load(config_path());
         $config = config('server');
 
-        if ($timezone = config('app.timezone')) {
+        if ($timezone = config('app.default_timezone')) {
             date_default_timezone_set($timezone);
         }
 
