@@ -47,6 +47,6 @@ class Response extends WorkerResponse
         if ($if_modified_since === null || !($mtime = filemtime($file))) {
             return false;
         }
-        return $if_modified_since === date('D, d M Y H:i:s', $mtime) . ' ' . \date_default_timezone_get();
+        return $if_modified_since === date('D, d M Y H:i:s', $mtime) . ' ' . date_default_timezone_get();
     }
 }
