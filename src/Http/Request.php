@@ -122,11 +122,40 @@ class Request extends WorkerRequest
             return $name === null ? [] : null;
         }
         if ($name !== null) {
-            return new UploadFile($files['tmp_name'], $files['name'], $files['type'], $files['error']);
+            if (is_array(current($files))) {
+                return $this->parseFiles($files);
+            }
+            return $this->parseFile($files);
         }
         $upload_files = [];
         foreach ($files as $name => $file) {
-            $upload_files[$name] = new UploadFile($file['tmp_name'], $file['name'], $file['type'], $file['error']);
+            if (is_array(current($file))) {
+                $upload_files[$name] = $this->parseFiles($file);
+            } else {
+                $upload_files[$name] = $this->parseFile($file);
+            }
+        }
+        return $upload_files;
+    }
+
+    /**
+     * @param $file
+     * @return UploadFile
+     */
+    protected function parseFile($file)
+    {
+        return new UploadFile($file['tmp_name'], $file['name'], $file['type'], $file['error']);
+    }
+
+    /**
+     * @param $files
+     * @return array
+     */
+    protected function parseFiles($files)
+    {
+        $upload_files = [];
+        foreach ($files as $file) {
+            $upload_files[$file['name']] = $this->parseFile($file);
         }
         return $upload_files;
     }
