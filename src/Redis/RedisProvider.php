@@ -46,6 +46,7 @@ use Workerman\Worker;
  * @method static array keys($pattern)
  * @method static bool|array scan($it)
  * @method static void migrate($host, $port, $keys, $dbIndex, $timeout, $copy = false, $replace = false)
+ * @method static bool select($dbIndex)
  * @method static bool move($key, $dbIndex)
  * @method static string|int|bool object($information, $key)
  * @method static bool persist($key)
