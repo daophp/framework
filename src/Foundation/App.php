@@ -152,16 +152,8 @@ class App
 
             $controller_and_action = static::parseControllerAction($path);
             if (!$controller_and_action || Route::hasDisableDefaultRoute()) {
-                // when route, controller and action not found, try to use Route::fallback
-                $callback = Route::getFallback() ?: function () {
-                    static $response_404;
-                    if (!$response_404){
-                        $response_404 = new Response(404, [], file_get_contents(static::$_publicPath . '/404.html'));
-                    }
-                    return $response_404;
-                };
-                static::$_callbacks[$key] = [$callback, '', '', ''];
-                list($callback, $request->app, $request->controller, $request->action) = static::$_callbacks[$key];
+                $callback = static::getFallback();
+                $request->app = $request->controller = $request->action = '';
                 static::send($connection, $callback($request), $request);
                 return null;
             }
@@ -176,6 +168,17 @@ class App
             static::send($connection, static::exceptionResponse($e, $request), $request);
         }
         return null;
+    }
+
+    /**
+     * @return callable|Closure
+     */
+    protected static function getFallback()
+    {
+        // when route, controller and action not found, try to use Route::fallback
+        return Route::getFallback() ?: function () {
+            return new Response(404, [], file_get_contents(static::$_publicPath . '/404.html'));
+        };
     }
 
     /**
@@ -350,6 +353,11 @@ class App
         }
 
         static::$_callbacks[$key] = [static::getCallback('__static__', function ($request) use ($file) {
+            clearstatcache(null, $file);
+            if (!is_file($file)) {
+                $callback = static::getFallback();
+                return $callback($request);
+            }
             return (new Response())->file($file);
         }, null, false), '', '', ''];
         list($callback, $request->app, $request->controller, $request->action) = static::$_callbacks[$key];
